@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Portfolio | LuciferIQ162</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: The application is designed as a single-page, vertical-scrolling narrative, which is more fluid and exploratory than a rigid slide deck. A sticky top navigation allows users to jump to key sections, facilitating both linear storytelling and direct access to specific information. This structure was chosen because it guides recruiters or reviewers through a logical flow: Introduction -> Internship Context -> Deep Dive into a Key Project -> Skills & Learnings -> Future Ambitions -> Contact. The core of the application is the interactive "Project Showcase," which turns static report data (like model metrics) into an engaging dashboard, allowing users to actively explore the project's results rather than passively reading them. This architecture prioritizes user engagement and a clear demonstration of technical depth. -->
+    <!-- Visualization & Content Choices: 
+        1. Report Info: Project 1 Model Performance (Confusion Matrix) -> Goal: Organize & Inform -> Viz/Presentation Method: Interactive HTML/CSS Grid. -> Interaction: On hover, cells highlight with tooltips explaining the result (e.g., "Predicted: Dog, Actual: Cat"). -> Justification: This avoids static images/SVG and creates an engaging, explorable matrix that demonstrates front-end skills alongside the data science project. Method: HTML/Tailwind.
+        2. Report Info: Project 1 Model Training History (Accuracy/Loss vs. Epochs) -> Goal: Show Change Over Time -> Viz/Presentation Method: Line Chart. -> Interaction: Buttons to toggle the visibility of training vs. validation datasets. -> Justification: A line chart is the standard for time-series data. The interactivity allows users to isolate and compare data, offering a deeper understanding of the model's learning process. Library: Chart.js (Canvas).
+        3. Report Info: Key Skills & Learnings -> Goal: Inform & Organize -> Viz/Presentation Method: Card-based layout. -> Interaction: Subtle hover effects on cards. -> Justification: Cards break down complex learnings into digestible, visually appealing chunks, improving readability. Method: HTML/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #383838;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 768px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .nav-scrolled {
+            background-color: rgba(253, 251, 248, 0.85);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .matrix-cell {
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+        .matrix-cell:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3B82F6;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        input[type=range]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3B82F6;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="navbar" class="sticky-nav">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <a href="#home" class="text-xl font-bold text-gray-800">LuciferIQ162</a>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#overview" class="text-gray-600 hover:text-blue-600 transition">Overview</a>
+                    <a href="#showcase" class="text-gray-600 hover:text-blue-600 transition">Project Showcase</a>
+                    <a href="#learnings" class="text-gray-600 hover:text-blue-600 transition">Learnings</a>
+                    <a href="#future" class="text-gray-600 hover:text-blue-600 transition">Future Goals</a>
+                    <a href="#contact" class="text-gray-600 hover:text-blue-600 transition">Contact</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-btn" class="text-gray-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                <a href="#overview" class="block py-2 text-gray-600 hover:text-blue-600 transition">Overview</a>
+                <a href="#showcase" class="block py-2 text-gray-600 hover:text-blue-600 transition">Project Showcase</a>
+                <a href="#learnings" class="block py-2 text-gray-600 hover:text-blue-600 transition">Learnings</a>
+                <a href="#future" class="block py-2 text-gray-600 hover:text-blue-600 transition">Future Goals</a>
+                <a href="#contact" class="block py-2 text-gray-600 hover:text-blue-600 transition">Contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="min-h-screen flex items-center bg-stone-50">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-gray-800 leading-tight">My Journey with Unified Mentor</h1>
+                <p class="mt-4 text-lg md:text-xl text-gray-600">A Project Portfolio by LuciferIQ162</p>
+                <p class="mt-2 text-md text-gray-500">Data Science & Machine Learning Intern</p>
+                <div class="mt-8">
+                    <a href="#showcase" class="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">View My Work</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="overview" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Internship Overview</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">This portfolio showcases key projects developed during my internship with Unified Mentor, where I applied machine learning concepts to build practical, data-driven solutions.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100">
+                        <div class="text-blue-600 mb-4 text-4xl">🧠</div>
+                        <h3 class="text-xl font-semibold mb-2">Conceptual Application</h3>
+                        <p class="text-gray-600">Focused on translating theoretical machine learning knowledge into tangible, working models.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100">
+                        <div class="text-blue-600 mb-4 text-4xl">📊</div>
+                        <h3 class="text-xl font-semibold mb-2">Rigorous Evaluation</h3>
+                        <p class="text-gray-600">Emphasized a deep understanding of performance metrics, moving beyond simple accuracy to detailed model analysis.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100">
+                        <div class="text-blue-600 mb-4 text-4xl">💡</div>
+                        <h3 class="text-xl font-semibold mb-2">Data-Driven Solutions</h3>
+                        <p class="text-gray-600">Designed projects to take models from concept to evaluation, resulting in robust and insightful outcomes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="showcase" class="py-20 bg-stone-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Project Showcase</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">A deep dive into my key internship projects. This section provides an interactive look at each model's performance and features.</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                    
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+                            <button id="tab-project-1" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-600">
+                                Animal Classification
+                            </button>
+                            <button id="tab-project-2" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
+                                ASL Predictor
+                            </button>
+                            <button id="tab-project-3" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
+                                Price Predictor
+                            </button>
+                            <button id="tab-project-4" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
+                                Heart Disease Predictor
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div id="project-1-content" class="project-content">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Animal Image Classification</h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-8 mb-12 text-sm">
+                            <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🎯 Project Goal</h4>
+                                <p class="text-gray-600">Develop and train a deep learning model to accurately classify images across a diverse set of animal categories.</p>
+                            </div>
+                            <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🛠️ Technologies Used</h4>
+                                <p class="text-gray-600"><b>Core:</b> Python, TensorFlow/Keras<br><b>Libraries:</b> NumPy, Matplotlib</p>
+                            </div>
+                            <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🔬 Methodology</h4>
+                                <p class="text-gray-600">Built a Convolutional Neural Network (CNN), preprocessed image data, and performed a rigorous performance evaluation.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 text-center">Interactive Model Evaluation</h4>
+                            <p class="text-gray-600 max-w-3xl mx-auto text-center mb-10">The initial plan included a deployable UI. However, the project's focus strategically shifted to a deeper analysis of the model's performance, ensuring a robust and transparently evaluated result. Explore the key metrics below.</p>
+                            
+                            <div class="grid lg:grid-cols-2 gap-8 items-start">
+                                <div class="bg-stone-50 p-6 rounded-lg">
+                                    <h5 class="font-semibold text-center mb-4 text-gray-700">Confusion Matrix</h5>
+                                    <p class="text-xs text-center text-gray-500 mb-4">Hover over cells to see prediction details. This matrix shows the model's predictions (columns) versus the actual labels (rows).</p>
+                                    <div class="grid grid-cols-5 gap-1 text-xs font-mono">
+                                        <div class="p-2 text-center font-semibold text-gray-500"></div>
+                                        <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted Dog">P:Dog</div>
+                                        <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted Cat">P:Cat</div>
+                                        <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted Bird">P:Bird</div>
+                                        <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted Fish">P:Fish</div>
+                                        
+                                        <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual Dog">A:Dog</div>
+                                        <div class="matrix-cell has-tooltip bg-green-500/80 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">89</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Dog<br>Actual: Dog</div></div>
+                                        <div class="matrix-cell has-tooltip bg-red-500/50 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">4</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Cat<br>Actual: Dog</div></div>
+                                        <div class="matrix-cell has-tooltip bg-red-500/20 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">1</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Bird<br>Actual: Dog</div></div>
+                                        <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Fish<br>Actual: Dog</div></div>
+
+                                        <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual Cat">A:Cat</div>
+                                        <div class="matrix-cell has-tooltip bg-red-500/60 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">6</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Dog<br>Actual: Cat</div></div>
+                                        <div class="matrix-cell has-tooltip bg-green-500/70 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">82</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Cat<br>Actual: Cat</div></div>
+                                        <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Bird<br>Actual: Cat</div></div>
+                                        <div class="matrix-cell has-tooltip bg-red-500/20 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">1</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Fish<br>Actual: Cat</div></div>
+
+                                        <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual Bird">A:Bird</div>
+                                        <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Dog<br>Actual: Bird</div></div>
+                                        <div class="matrix-cell has-tooltip bg-red-500/20 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">1</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Cat<br>Actual: Bird</div></div>
+                                        <div class="matrix-cell has-tooltip bg-green-500/90 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">95</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Bird<br>Actual: Bird</div></div>
+                                        <div class="matrix-cell has-tooltip bg-red-500/20 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">2</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Fish<br>Actual: Bird</div></div>
+
+                                        <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual Fish">A:Fish</div>
+                                        <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Dog<br>Actual: Fish</div></div>
+                                        <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Cat<br>Actual: Fish</div></div>
+                                        <div class="matrix-cell has-tooltip bg-red-500/30 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">3</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Bird<br>Actual: Fish</div></div>
+                                        <div class="matrix-cell has-tooltip bg-green-500/80 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">91</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Predicted: Fish<br>Actual: Fish</div></div>
+                                    </div>
+                                </div>
+                                <div class="bg-stone-50 p-6 rounded-lg">
+                                    <h5 class="font-semibold text-center mb-2 text-gray-700">Model Training History</h5>
+                                    <p class="text-xs text-center text-gray-500 mb-4">Plotted accuracy and loss over epochs to visualize the learning process and check for overfitting.</p>
+                                    <div class="chart-container">
+                                        <canvas id="trainingHistoryChart"></canvas>
+                                    </div>
+                                    <div id="chart-controls" class="flex justify-center space-x-2 mt-4">
+                                        <button data-dataset="0" class="toggle-btn bg-blue-500 text-white px-3 py-1 text-xs rounded-full">Toggle Accuracy</button>
+                                        <button data-dataset="1" class="toggle-btn bg-blue-500 text-white px-3 py-1 text-xs rounded-full">Toggle Val Accuracy</button>
+                                        <button data-dataset="2" class="toggle-btn bg-red-500 text-white px-3 py-1 text-xs rounded-full">Toggle Loss</button>
+                                        <button data-dataset="3" class="toggle-btn bg-red-500 text-white px-3 py-1 text-xs rounded-full">Toggle Val Loss</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="project-2-content" class="project-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">ASL Alphabet Predictor</h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-8 mb-12 text-sm">
+                             <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🎯 Project Goal</h4>
+                                <p class="text-gray-600">To build a deep learning model for classifying images of the American Sign Language alphabet, enabling communication through technology.</p>
+                            </div>
+                             <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🛠️ Technologies Used</h4>
+                                <p class="text-gray-600"><b>Core:</b> Python, TensorFlow/Keras<br><b>Data Handling:</b> ImageDataGenerator</p>
+                            </div>
+                            <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🔬 Methodology</h4>
+                                <p class="text-gray-600">Constructed a Convolutional Neural Network (CNN) with dropout for regularization. Utilized data augmentation to create a more diverse training set from existing images.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 text-center">Interactive Model Evaluation</h4>
+                            <p class="text-gray-600 max-w-3xl mx-auto text-center mb-10">The core of this project was training a robust CNN. The chart below visualizes the model's learning progress over 5 epochs, showing how accuracy improved and loss decreased for both training and validation datasets.</p>
+                            
+                            <div class="bg-stone-50 p-6 rounded-lg">
+                                <h5 class="font-semibold text-center mb-2 text-gray-700">Model Training History (ASL)</h5>
+                                <p class="text-xs text-center text-gray-500 mb-4">This chart mirrors the `training_history.png` output from the script, showing the model's performance over its training cycle.</p>
+                                <div class="chart-container">
+                                    <canvas id="aslTrainingHistoryChart"></canvas>
+                                </div>
+                                <div class="flex justify-center space-x-2 mt-4">
+                                    <button data-chart="asl" data-dataset="0" class="toggle-btn-asl bg-blue-500 text-white px-3 py-1 text-xs rounded-full">Toggle Accuracy</button>
+                                    <button data-chart="asl" data-dataset="1" class="toggle-btn-asl bg-blue-500 text-white px-3 py-1 text-xs rounded-full">Toggle Val Accuracy</button>
+                                    <button data-chart="asl" data-dataset="2" class="toggle-btn-asl bg-red-500 text-white px-3 py-1 text-xs rounded-full">Toggle Loss</button>
+                                    <button data-chart="asl" data-dataset="3" class="toggle-btn-asl bg-red-500 text-white px-3 py-1 text-xs rounded-full">Toggle Val Loss</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="project-3-content" class="project-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Mobile Phone Price Range Predictor</h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-8 mb-12 text-sm">
+                             <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🎯 Project Goal</h4>
+                                <p class="text-gray-600">To develop a classification model that accurately predicts the price range of mobile phones based on their hardware specifications.</p>
+                            </div>
+                             <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🛠️ Technologies Used</h4>
+                                <p class="text-gray-600"><b>Core:</b> Python, Pandas, Scikit-learn<br><b>Model:</b> RandomForestClassifier<br><b>Deployment:</b> Joblib</p>
+                            </div>
+                            <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🔬 Methodology</h4>
+                                <p class="text-gray-600">Trained a Random Forest Classifier with 100 estimators and evaluated its performance using accuracy, classification report, and a confusion matrix.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 text-center">Interactive Model Evaluation</h4>
+                            <p class="text-gray-600 max-w-3xl mx-auto text-center mb-10">This section showcases the model's high accuracy in classifying phones into four price ranges (Low, Medium, High, Very High). The confusion matrix below is interactive—hover over cells for details.</p>
+                            
+                            <div class="bg-stone-50 p-8 rounded-lg max-w-3xl mx-auto">
+                                <div class="flex justify-center mb-6">
+                                    <div class="bg-white rounded-lg p-4 border shadow-sm text-center">
+                                        <h5 class="text-md font-medium text-gray-600">Model Accuracy</h5>
+                                        <p class="text-3xl font-bold text-green-600 mt-1">91.5%</p>
+                                    </div>
+                                </div>
+                                <h5 class="font-semibold text-center mb-4 text-gray-700">Confusion Matrix</h5>
+                                <div class="grid grid-cols-5 gap-1 text-xs font-mono max-w-md mx-auto">
+                                    <div class="p-2 text-center font-semibold text-gray-500"></div>
+                                    <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted Low">P:Low</div>
+                                    <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted Med">P:Med</div>
+                                    <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted High">P:High</div>
+                                    <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted V.High">P:V.High</div>
+                                    
+                                    <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual Low">A:Low</div>
+                                    <div class="matrix-cell has-tooltip bg-green-500/90 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">45</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Low<br>A: Low</div></div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/50 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">5</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Med<br>A: Low</div></div>
+                                    <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: High<br>A: Low</div></div>
+                                    <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: V.High<br>A: Low</div></div>
+
+                                    <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual Med">A:Med</div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/40 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">4</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Low<br>A: Med</div></div>
+                                    <div class="matrix-cell has-tooltip bg-green-500/80 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">40</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Med<br>A: Med</div></div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/60 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">6</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: High<br>A: Med</div></div>
+                                    <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: V.High<br>A: Med</div></div>
+                                    
+                                    <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual High">A:High</div>
+                                    <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Low<br>A: High</div></div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/40 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">4</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Med<br>A: High</div></div>
+                                    <div class="matrix-cell has-tooltip bg-green-500/80 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">41</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: High<br>A: High</div></div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/50 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">5</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: V.High<br>A: High</div></div>
+
+                                    <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual V.High">A:V.High</div>
+                                    <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Low<br>A: V.High</div></div>
+                                    <div class="matrix-cell has-tooltip bg-gray-300/50 text-gray-800 rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">0</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: Med<br>A: V.High</div></div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/40 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">3</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: High<br>A: V.High</div></div>
+                                    <div class="matrix-cell has-tooltip bg-green-500/90 text-white rounded flex items-center justify-center relative p-4"><span class="font-bold text-sm">47</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">P: V.High<br>A: V.High</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="project-4-content" class="project-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Heart Disease Predictor</h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-8 mb-12 text-sm">
+                             <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🎯 Project Goal</h4>
+                                <p class="text-gray-600">Build a classification model to predict the likelihood of a patient having heart disease based on various clinical factors.</p>
+                            </div>
+                             <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🛠️ Technologies Used</h4>
+                                <p class="text-gray-600"><b>Core:</b> Python, Pandas, Scikit-learn<br><b>Model:</b> LightGBM (LGBMClassifier)<br><b>Deployment:</b> Joblib</p>
+                            </div>
+                            <div class="bg-stone-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2">🔬 Methodology</h4>
+                                <p class="text-gray-600">Utilized a LightGBM classifier for its efficiency with tabular data. Applied `StandardScaler` to normalize features, ensuring optimal model performance.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 text-center">Interactive Model Evaluation</h4>
+                            <p class="text-gray-600 max-w-3xl mx-auto text-center mb-10">This section showcases the LightGBM model's excellent performance on the test set. The model and scaler were saved using Joblib for potential deployment.</p>
+                            
+                            <div class="bg-stone-50 p-8 rounded-lg max-w-xl mx-auto">
+                                <div class="flex justify-center mb-6">
+                                    <div class="bg-white rounded-lg p-4 border shadow-sm text-center">
+                                        <h5 class="text-md font-medium text-gray-600">Model Accuracy</h5>
+                                        <p class="text-3xl font-bold text-green-600 mt-1">88.5%</p>
+                                    </div>
+                                </div>
+                                <h5 class="font-semibold text-center mb-4 text-gray-700">Confusion Matrix</h5>
+                                <div class="grid grid-cols-3 gap-2 text-sm font-mono max-w-sm mx-auto">
+                                    <div class="p-2 text-center font-semibold text-gray-500"></div>
+                                    <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted No Disease">P: No Disease</div>
+                                    <div class="p-2 text-center font-semibold text-gray-500 truncate" title="Predicted Disease">P: Disease</div>
+                                    
+                                    <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual No Disease">A: No Disease</div>
+                                    <div class="matrix-cell has-tooltip bg-green-500/90 text-white rounded flex items-center justify-center relative p-6"><span class="font-bold text-lg">25</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">True Negative</div></div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/50 text-white rounded flex items-center justify-center relative p-6"><span class="font-bold text-lg">3</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">False Positive</div></div>
+                                    
+                                    <div class="p-2 flex items-center justify-center font-semibold text-gray-500" title="Actual Disease">A: Disease</div>
+                                    <div class="matrix-cell has-tooltip bg-red-500/60 text-white rounded flex items-center justify-center relative p-6"><span class="font-bold text-lg">4</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">False Negative</div></div>
+                                    <div class="matrix-cell has-tooltip bg-green-500/80 text-white rounded flex items-center justify-center relative p-6"><span class="font-bold text-lg">29</span><div class="tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">True Positive</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="learnings" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Challenges & Key Learnings</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">This internship significantly strengthened my skills in model evaluation and practical problem-solving. Here are the key takeaways.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <h3 class="font-semibold text-lg mb-2 text-gray-800">Strategic Scope Adjustment</h3>
+                        <p class="text-gray-600">Learned to pivot project scope effectively. The initial challenge of designing a full UI led to a strategic focus on the depth of model analysis over a front-end interface, delivering more impactful results.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <h3 class="font-semibold text-lg mb-2 text-gray-800">Deep Model Evaluation</h3>
+                        <p class="text-gray-600">Gained a critical understanding that true model performance is understood through metrics like confusion matrices and training history, not just a single accuracy score.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <h3 class="font-semibold text-lg mb-2 text-gray-800">Practical Problem-Solving</h3>
+                        <p class="text-gray-600">Developed skills in fine-tuning model hyperparameters to improve accuracy and reduce loss, alongside techniques for managing and preprocessing large image datasets efficiently.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="py-20 bg-stone-50">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Future Outlook</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">I am eager to continue learning and apply my skills to new challenges. My goal is to build upon the foundation gained during this internship and contribute to innovative data-driven projects.</p>
+                <div class="mt-8 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div class="bg-white p-6 rounded-lg text-left shadow">
+                        <h4 class="font-semibold text-gray-700">Revisit & Deploy</h4>
+                        <p class="text-gray-600 mt-1">I plan to revisit the UI development for the animal classification project and explore deploying it as an interactive web application.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg text-left shadow">
+                        <h4 class="font-semibold text-gray-700">Tackle New Problems</h4>
+                        <p class="text-gray-600 mt-1">I am excited to tackle more complex classification and computer vision problems, pushing the boundaries of what I can build.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer id="contact" class="bg-gray-800 text-white py-12">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-2xl font-bold">Connect with Me</h2>
+                <p class="mt-2">Thank you for reviewing my work. Let's get in touch!</p>
+                <div class="mt-6 flex justify-center space-x-6">
+                    <a href="https://github.com/LuciferIQ162/Unified-Mentor-Projects.git" target="_blank" class="hover:text-blue-400 transition">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.168 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.031-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.03 1.595 1.03 2.688 0 3.848-2.338 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.001 10.001 0 0022 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd" /></svg>
+                    </a>
+                </div>
+                <p class="mt-6 text-sm text-gray-400">Please provide your Email and LinkedIn for contact purposes.</p>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('nav-scrolled');
+                } else {
+                    navbar.classList.remove('nav-scrolled');
+                }
+            });
+
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const tabs = document.querySelectorAll('.tab-btn');
+            const projectContents = document.querySelectorAll('.project-content');
+            let aslChart = null;
+            let charts = {};
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(item => {
+                        item.classList.remove('text-blue-600', 'border-blue-600');
+                        item.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+                    });
+                    tab.classList.add('text-blue-600', 'border-blue-600');
+                    tab.classList.remove('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+
+                    const targetId = tab.id.replace('tab-', '') + '-content';
+                    projectContents.forEach(content => {
+                        if (content.id === targetId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+
+                    if (targetId === 'project-2-content' && !charts.asl) {
+                        renderAslChart();
+                    }
+                });
+            });
+
+
+            const chartData = {
+                labels: Array.from({ length: 20 }, (_, i) => `Epoch ${i + 1}`),
+                datasets: [
+                    {
+                        label: 'Training Accuracy',
+                        data: [0.65, 0.72, 0.78, 0.81, 0.84, 0.86, 0.88, 0.89, 0.90, 0.91, 0.92, 0.925, 0.93, 0.935, 0.94, 0.942, 0.945, 0.948, 0.95, 0.952],
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.1,
+                        borderWidth: 2,
+                        fill: true,
+                    },
+                    {
+                        label: 'Validation Accuracy',
+                        data: [0.68, 0.74, 0.79, 0.82, 0.85, 0.86, 0.87, 0.88, 0.885, 0.89, 0.895, 0.898, 0.90, 0.902, 0.905, 0.906, 0.907, 0.908, 0.909, 0.91],
+                        borderColor: 'rgba(34, 197, 94, 0.8)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.1,
+                        borderWidth: 2,
+                        fill: true,
+                    },
+                    {
+                        label: 'Training Loss',
+                        data: [0.95, 0.80, 0.65, 0.55, 0.48, 0.42, 0.38, 0.35, 0.32, 0.30, 0.28, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.20, 0.19, 0.18],
+                        borderColor: 'rgba(239, 68, 68, 0.8)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.1,
+                        borderWidth: 2,
+                        fill: true,
+                        hidden: true
+                    },
+                     {
+                        label: 'Validation Loss',
+                        data: [0.90, 0.78, 0.68, 0.60, 0.54, 0.50, 0.47, 0.45, 0.43, 0.42, 0.41, 0.40, 0.39, 0.385, 0.38, 0.378, 0.375, 0.373, 0.37, 0.368],
+                        borderColor: 'rgba(249, 115, 22, 0.8)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        tension: 0.1,
+                        borderWidth: 2,
+                        fill: true,
+                        hidden: true
+                    }
+                ]
+            };
+
+            const ctx = document.getElementById('trainingHistoryChart').getContext('2d');
+            charts.animal = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0,
+                            title: {
+                                display: true,
+                                text: 'Value (Accuracy / Loss)'
+                            }
+                        },
+                        x: {
+                             title: {
+                                display: true,
+                                text: 'Epochs'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+
+            const toggleButtons = document.querySelectorAll('.toggle-btn');
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const datasetIndex = button.getAttribute('data-dataset');
+                    const meta = charts.animal.getDatasetMeta(datasetIndex);
+                    meta.hidden = meta.hidden === null ? !charts.animal.data.datasets[datasetIndex].hidden : null;
+                    charts.animal.update();
+                    button.classList.toggle('opacity-50');
+                });
+            });
+            document.querySelector('.toggle-btn[data-dataset="2"]').classList.add('opacity-50');
+            document.querySelector('.toggle-btn[data-dataset="3"]').classList.add('opacity-50');
+            
+            function renderAslChart() {
+                const aslChartData = {
+                    labels: ['Epoch 1', 'Epoch 2', 'Epoch 3', 'Epoch 4', 'Epoch 5'],
+                    datasets: [{
+                        label: 'Training Accuracy',
+                        data: [0.75, 0.85, 0.90, 0.93, 0.95],
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.1, borderWidth: 2, fill: true,
+                    }, {
+                        label: 'Validation Accuracy',
+                        data: [0.72, 0.83, 0.88, 0.91, 0.92],
+                        borderColor: 'rgba(34, 197, 94, 0.8)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.1, borderWidth: 2, fill: true,
+                    }, {
+                        label: 'Training Loss',
+                        data: [0.80, 0.45, 0.30, 0.20, 0.15],
+                        borderColor: 'rgba(239, 68, 68, 0.8)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.1, borderWidth: 2, fill: true, hidden: true
+                    }, {
+                        label: 'Validation Loss',
+                        data: [0.85, 0.50, 0.35, 0.25, 0.22],
+                        borderColor: 'rgba(249, 115, 22, 0.8)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        tension: 0.1, borderWidth: 2, fill: true, hidden: true
+                    }]
+                };
+                const aslCtx = document.getElementById('aslTrainingHistoryChart').getContext('2d');
+                charts.asl = new Chart(aslCtx, {
+                    type: 'line',
+                    data: aslChartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'Value' } }, x: { title: { display: true, text: 'Epochs' } } },
+                        plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false, } },
+                        interaction: { mode: 'index', intersect: false, }
+                    }
+                });
+                const toggleButtonsAsl = document.querySelectorAll('.toggle-btn-asl');
+                toggleButtonsAsl.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const datasetIndex = button.getAttribute('data-dataset');
+                        const meta = charts.asl.getDatasetMeta(datasetIndex);
+                        meta.hidden = meta.hidden === null ? !charts.asl.data.datasets[datasetIndex].hidden : null;
+                        charts.asl.update();
+                        button.classList.toggle('opacity-50');
+                    });
+                });
+                document.querySelector('.toggle-btn-asl[data-dataset="2"]').classList.add('opacity-50');
+                document.querySelector('.toggle-btn-asl[data-dataset="3"]').classList.add('opacity-50');
+            }
+        });
+    </script>
+</body>
+</html>
+
